@@ -1,47 +1,46 @@
 <div>
-  <input type="file" id="file" />
-  <button onclick="upload()">Upload</button>
+  <div>Name: <input type="text" name="name" id="name" /></div>
+  <div>Description: <input type="text" name="description" id="description" /></div>
+  <div>Amount (wei): <input type="number" name="amount" id="wei" /></div>
+  <div>File to Sell: <input type="file" id="file" /></div>
+  <div>Image: <input type="file" id="image" /></div>
+  <div>
+    <select name="chain" id="chain">
+      <option value="ethereum">Ethereum</option>
+      <option value="goerli">Goerli</option>
+    </select>
+  </div>
+  <button onclick="sell()">Sell</button>
+  <div id="metadataUrlDiv"></div>
 </div>
-
+<hr />
 <div>
   <input type="text" placeholder="https://ipfs.io/ipfs/cid" id="metadataUrl" />
-  <button onclick="download()">Download</button>
+</div>
+<div>
+  <button onclick="buy()">Buy</button>
 </div>
 
 <script onload="LitJsSdk.litJsSdkLoadedInALIT()" src="https://jscdn.litgateway.com/index.web.js"></script>
-<script src="./lit/lit.js"></script>
-<script src="./lit/contractAddresses.js"></script>
-<script src="./lit/generateAccessControlConditions.js"></script>
-<script src="./lit/generateMetadata.js"></script>
-<script src="./upload/ipfs.js"></script>
+<script src="./litroad.js"></script>
 
 <script>
-  // user input
-  const name = "myName";
-  const description = "myDescription";
-  const image = "https://images.unsplash.com/photo-1656274990019-979c5d603bb5?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80";
-  const chain = "ethereum";
-  const wei = "1";
-
-  async function upload() {
-    const file = document.getElementById("file").files[0];
-
-    // encrypt file
-    const { encryptedFile, encryptedSymmetricKey, accessControlConditions } = await lit.encryptFile(file, chain, wei);
-    // upload file to decentralized storage
-    const encryptedFileUrl = await ipfs.uploadFile(encryptedFile);
-
-    // generate metadata json
-    const metadata = generateMetadata(name, description, image, file.name, encryptedFileUrl, accessControlConditions, encryptedSymmetricKey);
-    // upload metadata to decentralized storage
-    const metadataUrl = await ipfs.uploadJson(metadata);
-
-    console.log(metadataUrl);
+  async function sell() {
+    const litRoad = await new LitRoad();
+    const metadataUrl = await litRoad.sell({
+      chain: document.getElementById("chain").value,
+      name: document.getElementById("name").value,
+      description: document.getElementById("description").value,
+      wei: document.getElementById("wei").value,
+      image: document.getElementById("image").files[0],
+      file: document.getElementById("file").files[0],
+    });
+    document.getElementById("metadataUrlDiv").innerHTML = metadataUrl;
   }
 
-  async function download() {
+  async function buy() {
     const metadataUrl = document.getElementById("metadataUrl").value;
-    await lit.decryptFile(metadataUrl, chain);
-  
+    const litRoad = await new LitRoad();
+    const metadata = await litRoad.buy(metadataUrl);
   }
 </script>
