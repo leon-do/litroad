@@ -1,0 +1,47 @@
+<div>
+  <input type="file" id="file" />
+  <button onclick="upload()">Upload</button>
+</div>
+
+<div>
+  <input type="text" placeholder="https://ipfs.io/ipfs/cid" id="metadataUrl" />
+  <button onclick="download()">Download</button>
+</div>
+
+<script onload="LitJsSdk.litJsSdkLoadedInALIT()" src="https://jscdn.litgateway.com/index.web.js"></script>
+<script src="./lit/lit.js"></script>
+<script src="./lit/contractAddresses.js"></script>
+<script src="./lit/generateAccessControlConditions.js"></script>
+<script src="./lit/generateMetadata.js"></script>
+<script src="./upload/ipfs.js"></script>
+
+<script>
+  // user input
+  const name = "myName";
+  const description = "myDescription";
+  const image = "https://images.unsplash.com/photo-1656274990019-979c5d603bb5?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80";
+  const chain = "ethereum";
+  const wei = "0";
+
+  async function upload() {
+    const file = document.getElementById("file").files[0];
+
+    // encrypt file
+    const { encryptedFile, encryptedSymmetricKey, accessControlConditions } = await lit.encryptFile(file, chain, wei);
+    // upload file to decentralized storage
+    const encryptedFileUrl = await ipfs.uploadFile(encryptedFile);
+
+    // generate metadata json
+    const metadata = generateMetadata(name, description, image, file.name, encryptedFileUrl, accessControlConditions, encryptedSymmetricKey);
+    // upload metadata to decentralized storage
+    const metadataUrl = await ipfs.uploadJson(metadata);
+
+    console.log(metadataUrl);
+  }
+
+  async function download() {
+    const metadataUrl = document.getElementById("metadataUrl").value;
+    await lit.decryptFile(metadataUrl, chain);
+  
+  }
+</script>
