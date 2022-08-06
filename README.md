@@ -10,7 +10,7 @@ How to use `litroad.js`
 <script src="./litroad.js"></script>
 ```
 
-## Selling a File.
+## Selling a File
 
 Provide chain, name, description etc. Returns a url (metadataUrl)
 
@@ -32,7 +32,7 @@ async function sell() {
 }
 ```
 
-## Buy
+## Buying a File
 
 Use the url to purchase
 
