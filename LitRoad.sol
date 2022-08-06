@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.0;
 
 contract LitRoad {
@@ -28,6 +29,7 @@ contract LitRoad {
         uint256 _price
     ) public {
         require(items[_itemId].seller == address(0), "Item Already Listed");
+        require(items[_itemId].investor == address(0), "Item Already Listed");
         items[_itemId] = Item({
             seller: _seller,
             investor: _investor,
