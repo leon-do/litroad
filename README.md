@@ -27,7 +27,7 @@ async function upload() {
   });
   document.getElementById("metadataUrlDiv").innerHTML = metadataUrl;
 
-  // https://ipfs.infura.io/ipfs/QmNTysYtyArCAYrh9WDzyzLZP9qimwd2aYgnAnvUrRFAMD
+  // https://bafybeif2elp457ueq3z4dp244x5gfptfo7hyxtzz6gbwodqd7f5m5c7kcu.ipfs.infura-ipfs.io/
   console.log(metadataUrl);
 }
 ```
