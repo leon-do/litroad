@@ -10,7 +10,7 @@
       <option value="goerli">Goerli</option>
     </select>
   </div>
-  <button onclick="sell()">Sell</button>
+  <button onclick="upload()">Upload</button>
   <div id="metadataUrlDiv"></div>
 </div>
 <hr />
@@ -18,16 +18,16 @@
   <input type="text" placeholder="https://ipfs.io/ipfs/cid" id="metadataUrl" />
 </div>
 <div>
-  <button onclick="buy()">Buy</button>
+  <button onclick="download()">download</button>
 </div>
 
 <script onload="LitJsSdk.litJsSdkLoadedInALIT()" src="https://jscdn.litgateway.com/index.web.js"></script>
 <script src="./litroad.js"></script>
 
 <script>
-  async function sell() {
+  async function upload() {
     const litRoad = await new LitRoad();
-    const metadataUrl = await litRoad.sell({
+    const metadataUrl = await litRoad.upload({
       chain: document.getElementById("chain").value,
       name: document.getElementById("name").value,
       description: document.getElementById("description").value,
@@ -38,9 +38,9 @@
     document.getElementById("metadataUrlDiv").innerHTML = metadataUrl;
   }
 
-  async function buy() {
+  async function download() {
     const metadataUrl = document.getElementById("metadataUrl").value;
     const litRoad = await new LitRoad();
-    const metadata = await litRoad.buy(metadataUrl);
+    const metadata = await litRoad.download(metadataUrl);
   }
 </script>

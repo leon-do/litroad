@@ -10,14 +10,14 @@ How to use `litroad.js`
 <script src="./litroad.js"></script>
 ```
 
-## Selling a File
+## Uploading a File
 
 Provide chain, name, description etc. Returns a url (metadataUrl)
 
 ```javascript
-async function sell() {
+async function upload() {
   const litRoad = await new LitRoad();
-  const metadataUrl = await litRoad.sell({
+  const metadataUrl = await litRoad.upload({
     chain: "ethereum",
     name: "Name of Item",
     description: "What the item does",
@@ -32,21 +32,21 @@ async function sell() {
 }
 ```
 
-## Buying a File
+## Downloading a File
 
 Use the url to purchase
 
 ```javascript
 async function buy() {
-  const metadataUrl = "https://ipfs.infura.io/ipfs/QmNTysYtyArCAYrh9WDzyzLZP9qimwd2aYgnAnvUrRFAMD";
+  const metadataUrl = "https://bafybeif2elp457ueq3z4dp244x5gfptfo7hyxtzz6gbwodqd7f5m5c7kcu.ipfs.infura-ipfs.io/";
   const litRoad = await new LitRoad();
-  const metadata = await litRoad.buy(metadataUrl);
+  const metadata = await litRoad.download(metadataUrl);
 }
 ```
 
 ## Metadata URL
 
-Example: https://bafybeigewn6q6gofszasadd32lar7nyqfbuh5roq6ymypfakbob7u5ix74.ipfs.infura-ipfs.io/
+Example: https://bafybeif2elp457ueq3z4dp244x5gfptfo7hyxtzz6gbwodqd7f5m5c7kcu.ipfs.infura-ipfs.io/
 
 `name` is for UI
 

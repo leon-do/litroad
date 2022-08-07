@@ -1,5 +1,5 @@
 class LitRoad {
-  async sell(args) {
+  async upload(args) {
     this.chain = args.chain;
     this.name = args.name;
     this.description = args.description;
@@ -21,7 +21,7 @@ class LitRoad {
     return this.metadataUrl;
   }
 
-  async buy(metadataUrl) {
+  async download(metadataUrl) {
     // fetch metadata from decentralized storage
     const { filename, chain, encryptedFileUrl, encryptedSymmetricKey, evmContractConditions } = await fetch(metadataUrl).then((res) => res.json());
     // sign with metamask
