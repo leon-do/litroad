@@ -20,6 +20,17 @@ contract LitRoad {
     // Balance of sellers: 0xAlice => 99 wei
     mapping(address => uint256) public balances;
 
+    // Events
+    event Sell(
+        uint256 indexed _itemId,
+        address indexed _seller,
+        address indexed _investor,
+        string _uri,
+        uint256 _price
+    );
+    event Buy(uint256 indexed _itemId, address indexed _buyer, uint256 _amount);
+    event Withdraw(address indexed _to, uint256 _amount);
+
     // Method to list and sell item
     function sell(
         uint256 _itemId,
@@ -30,12 +41,15 @@ contract LitRoad {
     ) public {
         require(items[_itemId].seller == address(0), "Item Already Listed");
         require(items[_itemId].investor == address(0), "Item Already Listed");
+        // create item to sell
         items[_itemId] = Item({
             seller: _seller,
             investor: _investor,
             uri: _uri,
             price: _price
         });
+        // emit Sell event
+        emit Sell(_itemId, _seller, _investor, _uri, _price);
     }
 
     // Method to buy item
@@ -52,12 +66,20 @@ contract LitRoad {
         balances[items[_itemId].seller] += sellerValue;
         // Depost into investor's account
         balances[items[_itemId].investor] += investorValue;
+        // emit Buy event
+        emit Buy(_itemId, msg.sender, msg.value);
     }
 
     // Method to withdraw funds
     function withdraw(address _to) public payable {
+        require(balances[_to] > 0, "Insufficient Funds");
+        // get amount to withdraw
         uint256 amount = balances[_to];
+        // set balance to 0
         balances[_to] = 0;
+        // withdraw amount
         payable(_to).transfer(amount);
+        // emit Withdraw event
+        emit Withdraw(_to, amount);
     }
 }
