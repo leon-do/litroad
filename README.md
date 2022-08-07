@@ -21,7 +21,7 @@ async function sell() {
     chain: "ethereum",
     name: "Name of Item",
     description: "What the item does",
-    wei: "1000000000000000000",
+    price: "1000000000000000000", // in smallest unit
     image: document.getElementById("image").files[0],
     file: document.getElementById("file").files[0],
   });
@@ -46,36 +46,32 @@ async function buy() {
 
 ## Metadata URL
 
-`name`, `description`, `imageUrl` are used to build the UI
+Example: https://bafybeigewn6q6gofszasadd32lar7nyqfbuh5roq6ymypfakbob7u5ix74.ipfs.infura-ipfs.io/
+
+`name` is for UI
+
+`description` is for UI
+
+`imageUrl` is for UI
+
+`chain` is for litroad network switching/evm contract conditions
+
+`price` is to check if lit conditions (price) match smart contract
+
+`seller` is to check if lit conditions (seller address) match smart contract
+
+`itemId` is a unique identifier. check if lit conditions match smart contract
 
 `filename` is the name of encrypted file
 
 `encryptedFileUrl` is the url to download the encrypted file
 
-`accessControlConditions` is part of lit protocol. Used to gate content.
+`evmContractConditions` is part of lit protocol. Used to gate content. All conditions must me true:
 
-`encryptedSymmetricKey` is used to decrypt the file if access control conditions are true
+  - Check if `itemId` has correct `seller` address
+  - Check if `itemId` has correct `price` in smallest unit (ie wei)
+  - Check if buyer purchased item by calling `purchase[tokenId][:userAddress]`
 
-```json
-{
-  "name": "Name of Item",
-  "description": "What the item does",
-  "imageUrl": "https://ipfs.infura.io/ipfs/QmaFT6fi1rmWcJcfpDrrwRsT1Dbp5juLVpSuCw9vaZkDbT",
-  "filename": "original.png",
-  "encryptedFileUrl": "https://ipfs.infura.io/ipfs/QmS6jat99vreupR2ydMVvea2y9LfwkmHimS4eaHtjypsvG",
-  "accessControlConditions": [
-    {
-      "contractAddress": "",
-      "standardContractType": "",
-      "chain": "ethereum",
-      "method": "eth_getBalance",
-      "parameters": [":userAddress", "latest"],
-      "returnValueTest": {
-        "comparator": ">=",
-        "value": "1000000000000000000"
-      }
-    }
-  ],
-  "encryptedSymmetricKey": "3edd96a07bee97e4fc6f7dca68d077f7c904618eb14b5f324d405e995bca86a9da3a3c2ebdcc9d303402da7e237d7f0e95ab9472b9d824e374268383a69dff45b0f20591a8d11d32df8872db1f611710016ff3fe2b7accbf1a6bdb4a6832d9a668766dff506f1bf9046827045da9c7c4396910197c906f991066c8040aee50d70000000000000020e2f9dc80385829da3edfd4d0ec89c2ce790ada97743113c1a56e8b4489ecacd3a23a164a432e97bdff49a652d0745982"
-}
-```
+`encryptedSymmetricKey` is used to decrypt the file if EVM control conditions are true
+
+

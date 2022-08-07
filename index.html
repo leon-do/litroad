@@ -1,7 +1,7 @@
 <div>
   <div>Name: <input type="text" name="name" id="name" /></div>
   <div>Description: <input type="text" name="description" id="description" /></div>
-  <div>Amount (wei): <input type="number" name="amount" id="wei" /></div>
+  <div>Price (wei): <input type="number" name="price" id="price" /></div>
   <div>File to Sell: <input type="file" id="file" /></div>
   <div>Image: <input type="file" id="image" /></div>
   <div>
@@ -31,7 +31,7 @@
       chain: document.getElementById("chain").value,
       name: document.getElementById("name").value,
       description: document.getElementById("description").value,
-      wei: document.getElementById("wei").value,
+      price: document.getElementById("price").value,
       image: document.getElementById("image").files[0],
       file: document.getElementById("file").files[0],
     });

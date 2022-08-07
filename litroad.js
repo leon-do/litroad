@@ -4,9 +4,10 @@ class LitRoad {
     this.name = args.name;
     this.description = args.description;
     this.image = args.image;
-    this.wei = args.wei;
+    this.price = args.price;
     this.file = args.file;
     this.image = args.image;
+    this.itemId = this.#generateRandomNumber();
     // upload image decentralized storage and get back url
     this.imageUrl = await this.#uploadFile(this.image);
     // encrypt file
@@ -22,8 +23,7 @@ class LitRoad {
 
   async buy(metadataUrl) {
     // fetch metadata from decentralized storage
-    const { filename, encryptedFileUrl, encryptedSymmetricKey, evmContractConditions } = await fetch(metadataUrl).then((res) => res.json());
-    const chain = evmContractConditions[0].chain;
+    const { filename, chain, encryptedFileUrl, encryptedSymmetricKey, evmContractConditions } = await fetch(metadataUrl).then((res) => res.json());
     // sign with metamask
     const authSig = await LitJsSdk.checkAndSignAuthMessage({ chain });
     // fetch encrypted file from decentralized storage
@@ -94,7 +94,10 @@ class LitRoad {
       name: this.name,
       description: this.description,
       imageUrl: this.imageUrl,
+      chain: this.chain,
+      price: this.price,
       seller: this.seller,
+      itemId: this.itemId,
       filename: this.filename,
       encryptedFileUrl: this.encryptedFileUrl,
       evmContractConditions: this.#generateEvmContractConditions(),
@@ -105,11 +108,21 @@ class LitRoad {
   #getContractAddress() {
     const contractAddress = {
       ethereum: "0xeth",
-      goerli: "0xf41538e5c5286e9598f7157f2e93259f2e0d797b",
+      goerli: "0x25Ba45202257e16117db55571eaBb236A07cAE90",
       polygon: "0xpoly",
       arbitrium: "0xarbitrium",
     };
     return contractAddress[this.chain];
+  }
+
+  #generateRandomNumber() {
+    // generate a uint256ish randomish numberish string
+    let num = "";
+    for (let i = 0; i < 77; i++) {
+      const random = Math.floor(Math.random() * 10);
+      num += random;
+    }
+    return num;
   }
 
   #generateEvmContractConditions = () => {
@@ -119,7 +132,7 @@ class LitRoad {
         contractAddress: this.#getContractAddress(),
         chain: this.chain,
         functionName: "items",
-        functionParams: ["1"],
+        functionParams: [this.itemId],
         functionAbi: {
           inputs: [
             {
@@ -165,7 +178,7 @@ class LitRoad {
         contractAddress: this.#getContractAddress(),
         chain: this.chain,
         functionName: "items",
-        functionParams: ["1"],
+        functionParams: [this.itemId],
         functionAbi: {
           inputs: [
             {
@@ -203,7 +216,43 @@ class LitRoad {
         returnValueTest: {
           key: "price",
           comparator: "=",
-          value: this.wei,
+          value: this.price,
+        },
+      },
+      { operator: "and" },
+      {
+        contractAddress: this.#getContractAddress(),
+        chain: this.chain,
+        functionName: "purchase",
+        functionParams: [this.itemId, ":userAddress"],
+        functionAbi: {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          name: "purchase",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        returnValueTest: {
+          key: "",
+          comparator: "=",
+          value: "true",
         },
       },
     ];
