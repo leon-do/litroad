@@ -21,13 +21,7 @@ contract LitRoad {
     mapping(address => uint256) public balances;
 
     // Events
-    event Sell(
-        uint256 indexed _itemId,
-        address indexed _seller,
-        address indexed _investor,
-        string _uri,
-        uint256 _price
-    );
+    event Sell(uint256 _itemId);
     event Buy(uint256 indexed _itemId, address indexed _buyer, uint256 _amount);
     event Withdraw(address indexed _to, uint256 _amount);
 
@@ -49,7 +43,7 @@ contract LitRoad {
             price: _price
         });
         // emit Sell event
-        emit Sell(_itemId, _seller, _investor, _uri, _price);
+        emit Sell(_itemId);
     }
 
     // Method to buy item
