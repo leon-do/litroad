@@ -1,32 +1,4 @@
 class LitRoad {
-  async buy(metadataUrl) {
-    // fetch metadata from decentralized storage
-    const { filename, encryptedFileUrl, encryptedSymmetricKey, accessControlConditions } = await fetch(metadataUrl).then((res) => res.json());
-    const chain = accessControlConditions[0].chain;
-    // sign with metamask
-    const authSig = await LitJsSdk.checkAndSignAuthMessage({ chain });
-    // fetch encrypted file from decentralized storage
-    const file = await fetch(encryptedFileUrl).then((res) => res.blob());
-    // obtain decrypted symmetric key
-    const symmetricKey = await window.litNodeClient.getEncryptionKey({
-      accessControlConditions,
-      toDecrypt: encryptedSymmetricKey,
-      chain,
-      authSig,
-    });
-    // decrypt file
-    const decryptedFile = await LitJsSdk.decryptFile({
-      file,
-      symmetricKey,
-    });
-    // download file
-    LitJsSdk.downloadFile({
-      filename,
-      data: new Uint8Array(decryptedFile),
-      memetype: "application/octet-stream",
-    });
-  }
-
   async sell(args) {
     this.chain = args.chain;
     this.name = args.name;
@@ -48,14 +20,43 @@ class LitRoad {
     return this.metadataUrl;
   }
 
+  async buy(metadataUrl) {
+    // fetch metadata from decentralized storage
+    const { filename, encryptedFileUrl, encryptedSymmetricKey, evmContractConditions } = await fetch(metadataUrl).then((res) => res.json());
+    const chain = evmContractConditions[0].chain;
+    // sign with metamask
+    const authSig = await LitJsSdk.checkAndSignAuthMessage({ chain });
+    // fetch encrypted file from decentralized storage
+    const file = await fetch(encryptedFileUrl).then((res) => res.blob());
+    // obtain decrypted symmetric key
+    const symmetricKey = await window.litNodeClient.getEncryptionKey({
+      evmContractConditions,
+      toDecrypt: encryptedSymmetricKey,
+      chain,
+      authSig,
+    });
+    // decrypt file
+    const decryptedFile = await LitJsSdk.decryptFile({
+      file,
+      symmetricKey,
+    });
+    // download file
+    LitJsSdk.downloadFile({
+      filename,
+      data: new Uint8Array(decryptedFile),
+      memetype: "application/octet-stream",
+    });
+  }
+
   async #encryptFile(_file) {
     // sign with metamask
     const authSig = await LitJsSdk.checkAndSignAuthMessage({ chain: this.chain });
+    this.seller = authSig.address;
     // encrypt file
     const { encryptedFile, symmetricKey } = await LitJsSdk.encryptFile({ file: _file });
-    const accessControlConditions = this.#generateAccessControlConditions();
+    const evmContractConditions = this.#generateEvmContractConditions();
     const encryptedSymmetricKey = await window.litNodeClient.saveEncryptionKey({
-      accessControlConditions,
+      evmContractConditions,
       symmetricKey,
       authSig,
       chain: this.chain,
@@ -93,37 +94,118 @@ class LitRoad {
       name: this.name,
       description: this.description,
       imageUrl: this.imageUrl,
+      seller: this.seller,
       filename: this.filename,
       encryptedFileUrl: this.encryptedFileUrl,
-      accessControlConditions: this.#generateAccessControlConditions(),
+      evmContractConditions: this.#generateEvmContractConditions(),
       encryptedSymmetricKey: this.encryptedSymmetricKey,
     };
   }
 
-  #generateAccessControlConditions = () => {
-    // https://developer.litprotocol.com/AccessControlConditions/EVM/basicExamples
-    return [
-      {
-        contractAddress: this.#getContractAddress(),
-        standardContractType: "",
-        chain: this.chain,
-        method: "eth_getBalance",
-        parameters: [":userAddress", "latest"],
-        returnValueTest: {
-          comparator: ">=",
-          value: this.wei,
-        },
-      },
-    ];
-  };
-
   #getContractAddress() {
     const contractAddress = {
       ethereum: "0xeth",
-      goerli: "0xgoerli",
+      goerli: "0xf41538e5c5286e9598f7157f2e93259f2e0d797b",
       polygon: "0xpoly",
       arbitrium: "0xarbitrium",
     };
     return contractAddress[this.chain];
   }
+
+  #generateEvmContractConditions = () => {
+    // https://developer.litprotocol.com/AccessControlConditions/EVM/customContractCalls
+    return [
+      {
+        contractAddress: this.#getContractAddress(),
+        chain: this.chain,
+        functionName: "items",
+        functionParams: ["1"],
+        functionAbi: {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          name: "items",
+          outputs: [
+            {
+              internalType: "address",
+              name: "seller",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "investor",
+              type: "address",
+            },
+            {
+              internalType: "string",
+              name: "uri",
+              type: "string",
+            },
+            {
+              internalType: "uint256",
+              name: "price",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        returnValueTest: {
+          key: "seller",
+          comparator: "=",
+          value: this.seller,
+        },
+      },
+      { operator: "and" },
+      {
+        contractAddress: this.#getContractAddress(),
+        chain: this.chain,
+        functionName: "items",
+        functionParams: ["1"],
+        functionAbi: {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          name: "items",
+          outputs: [
+            {
+              internalType: "address",
+              name: "seller",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "investor",
+              type: "address",
+            },
+            {
+              internalType: "string",
+              name: "uri",
+              type: "string",
+            },
+            {
+              internalType: "uint256",
+              name: "price",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        returnValueTest: {
+          key: "price",
+          comparator: "=",
+          value: this.wei,
+        },
+      },
+    ];
+  };
 }
