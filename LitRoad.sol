@@ -8,6 +8,7 @@ contract LitRoad {
         address investor; // Address of user paying for tx fees. Gets 1% of sale
         string uri; // Metadata uri: https://ipfs.infura.io/ipfs/QmNTysYtyArCAYrh9WDzyzLZP9qimwd2aYgnAnvUrRFAMD
         uint256 price; // Price of item in smallest unit (wei)
+        bool canBuy; // content creator can delist item
     }
 
     // Stores all items: itemId => Item
@@ -23,6 +24,8 @@ contract LitRoad {
     event Sell(uint64 _itemId);
     event Buy(uint64 indexed _itemId, address indexed _buyer, uint256 _amount);
     event Withdraw(address indexed _to, uint256 _amount);
+    event Delist(uint64 indexed _itemId, address indexed _seller);
+    event Relist(uint64 indexed _itemId, address indexed _seller);
 
     // Method to list and sell item
     function sell(
@@ -39,7 +42,8 @@ contract LitRoad {
             seller: _seller,
             investor: _investor,
             uri: _uri,
-            price: _price
+            price: _price,
+            canBuy: true
         });
         // emit Sell event
         emit Sell(_itemId);
@@ -47,6 +51,7 @@ contract LitRoad {
 
     // Method to buy item
     function buy(uint64 _itemId) public payable {
+        require(items[_itemId].canBuy, "Item not for sale");
         require(msg.value >= items[_itemId].price, "Insufficient Funds");
         require(purchase[_itemId][msg.sender] == false, "Already Purchased");
         // Set purchase to true
@@ -74,5 +79,19 @@ contract LitRoad {
         payable(_to).transfer(amount);
         // emit Withdraw event
         emit Withdraw(_to, amount);
+    }
+
+    function delist(uint64 _itemId) public {
+        require(items[_itemId].seller == msg.sender, "Only seller can delist");
+        require(items[_itemId].canBuy, "Already delisted");
+        items[_itemId].canBuy = false;
+        emit Delist(_itemId, msg.sender);
+    }
+
+    function relist(uint64 _itemId) public {
+        require(items[_itemId].seller == msg.sender, "Only seller can delist");
+        require(items[_itemId].canBuy == false, "Already listed");
+        items[_itemId].canBuy = true;
+        emit Relist(_itemId, msg.sender);
     }
 }
