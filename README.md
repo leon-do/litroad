@@ -21,7 +21,7 @@ async function upload() {
     chain: "ethereum",
     name: "Name of Item",
     description: "What the item does",
-    price: "1000000000000000000", // in smallest unit
+    price: "0.0123", // amount in ETH
     image: document.getElementById("image").files[0],
     file: document.getElementById("file").files[0],
   });

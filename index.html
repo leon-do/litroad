@@ -15,12 +15,20 @@
 </div>
 <hr />
 <div>
-  <input type="text" placeholder="https://ipfs.io/ipfs/cid" id="metadataUrl" />
+  <div>Buy: <input type="text" placeholder="https://ipfs.io/ipfs/cid" id="sellMetadaDataUrl" /></div>
+</div>
+<div>
+  <button onclick="buy()">Buy</button>
+</div>
+<hr />
+<div>
+  <input type="text" placeholder="https://ipfs.io/ipfs/cid" id="downloadMetadataUrl" />
 </div>
 <div>
   <button onclick="download()">download</button>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.6.9/ethers.umd.min.js"></script>
 <script onload="LitJsSdk.litJsSdkLoadedInALIT()" src="https://jscdn.litgateway.com/index.web.js"></script>
 <script src="./litroad.js"></script>
 
@@ -38,8 +46,15 @@
     document.getElementById("metadataUrlDiv").innerHTML = metadataUrl;
   }
 
+  async function buy() {
+    const metadataUrl = document.getElementById("sellMetadaDataUrl").value;
+    const litRoad = await new LitRoad();
+    const txHash = await litRoad.buy(metadataUrl);
+    console.log(txHash);
+  }
+
   async function download() {
-    const metadataUrl = document.getElementById("metadataUrl").value;
+    const metadataUrl = document.getElementById("downloadMetadataUrl").value;
     const litRoad = await new LitRoad();
     const metadata = await litRoad.download(metadataUrl);
   }

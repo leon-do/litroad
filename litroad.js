@@ -1,13 +1,13 @@
 class LitRoad {
-  async upload(args) {
-    this.chain = args.chain;
-    this.name = args.name;
-    this.description = args.description;
-    this.image = args.image;
-    this.price = args.price;
-    this.file = args.file;
-    this.image = args.image;
-    this.itemId = this.#generateRandomNumber();
+  async upload(_args) {
+    this.chain = _args.chain;
+    this.name = _args.name;
+    this.description = _args.description;
+    this.image = _args.image;
+    this.price = ethers.utils.parseEther(_args.price).toString(); // convert to wei
+    this.file = _args.file;
+    this.image = _args.image;
+    this.itemId = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER).toString(); // uint64ish
     // upload image decentralized storage and get back url
     this.imageUrl = await this.#uploadFile(this.image);
     // encrypt file
@@ -17,14 +17,14 @@ class LitRoad {
     // generate metadata and get back url
     const metadata = this.#generateMetadata();
     // https://bafybeiexzwmq3jxexlbv2tgfzkmu47t3u35h5q4q5ftcjixxy5eaizl3i4.ipfs.infura-ipfs.io/
-    this.metadataUrl = await this.#uploadJson(metadata);
-    return this.metadataUrl;
+    const metadataUrl = await this.#uploadJson(metadata);
+    return metadataUrl;
   }
 
-  async download(metadataUrl) {
+  async download(_metadataUrl) {
     // fetch metadata from decentralized storage
-    const { filename, chain, encryptedFileUrl, encryptedSymmetricKey, evmContractConditions } = await fetch(metadataUrl).then((res) => res.json());
-    // sign with metamask
+    const { filename, chain, encryptedFileUrl, encryptedSymmetricKey, evmContractConditions } = await fetch(_metadataUrl).then((res) => res.json());
+    // sign with metamask to decrypt file
     const authSig = await LitJsSdk.checkAndSignAuthMessage({ chain });
     // fetch encrypted file from decentralized storage
     const file = await fetch(encryptedFileUrl).then((res) => res.blob());
@@ -46,6 +46,22 @@ class LitRoad {
       data: new Uint8Array(decryptedFile),
       memetype: "application/octet-stream",
     });
+  }
+
+  async buy(_metadataUrl) {
+    // fetch metadata from decentralized storage
+    const { chain, price, itemId } = await fetch(_metadataUrl).then((res) => res.json());
+    // to switch to correct network
+    await LitJsSdk.checkAndSignAuthMessage({ chain });
+    // get provider: https://github.com/LIT-Protocol/lit-js-sdk/blob/e148a0d76d706dbe1aaa06cfd2234b3918f2ec2e/src/utils/eth.js#L98
+    const { web3 } = await LitJsSdk.connectWeb3();
+    // get signer
+    const signer = await web3.getSigner();
+    const abi = [{ inputs: [{ internalType: "uint256", name: "_itemId", type: "uint256" }], name: "buy", outputs: [], stateMutability: "payable", type: "function" }];
+    // call buy function
+    const contract = new ethers.Contract(this.#getContractAddress(chain), abi, signer);
+    const receipt = contract.connect(signer)["buy"](itemId, { value: price });
+    return receipt.hash;
   }
 
   async #encryptFile(_file) {
@@ -105,31 +121,21 @@ class LitRoad {
     };
   }
 
-  #getContractAddress() {
+  #getContractAddress(_chain) {
     const contractAddress = {
       ethereum: "0xeth",
       goerli: "0x25Ba45202257e16117db55571eaBb236A07cAE90",
       polygon: "0xpoly",
       arbitrium: "0xarbitrium",
     };
-    return contractAddress[this.chain];
-  }
-
-  #generateRandomNumber() {
-    // generate a uint256ish randomish numberish string
-    let num = "";
-    for (let i = 0; i < 77; i++) {
-      const random = Math.floor(Math.random() * 10);
-      num += random;
-    }
-    return num;
+    return contractAddress[_chain];
   }
 
   #generateEvmContractConditions = () => {
     // https://developer.litprotocol.com/AccessControlConditions/EVM/customContractCalls
     return [
       {
-        contractAddress: this.#getContractAddress(),
+        contractAddress: this.#getContractAddress(this.chain),
         chain: this.chain,
         functionName: "items",
         functionParams: [this.itemId],
@@ -175,7 +181,7 @@ class LitRoad {
       },
       { operator: "and" },
       {
-        contractAddress: this.#getContractAddress(),
+        contractAddress: this.#getContractAddress(this.chain),
         chain: this.chain,
         functionName: "items",
         functionParams: [this.itemId],
@@ -221,7 +227,7 @@ class LitRoad {
       },
       { operator: "and" },
       {
-        contractAddress: this.#getContractAddress(),
+        contractAddress: this.#getContractAddress(this.chain),
         chain: this.chain,
         functionName: "purchase",
         functionParams: [this.itemId, ":userAddress"],
